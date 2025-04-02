@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Grocery Budget Planner (INR/kg) | Enterprise Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        neutral: {
+                            50: '#fafafa',
+                            100: '#f5f5f5',
+                            200: '#e5e5e5',
+                            300: '#d4d4d4',
+                            400: '#a3a3a3',
+                            500: '#737373',
+                            600: '#525252',
+                            700: '#404040',
+                            800: '#262626',
+                            900: '#171717',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['DM Sans', 'sans-serif'],
+                        display: ['Lexend', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 2px 6px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.08)',
+                        'card-hover': '0 2px 8px rgba(0, 0, 0, 0.09), 0 16px 32px rgba(0, 0, 0, 0.12)',
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Lexend:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        .heading {
+            font-family: 'Lexend', sans-serif;
+        }
+        
+        .pattern-bg {
+            background-color: #f8fafc;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        /* Input focus animation */
+        .input-focus-effect {
+            position: relative;
+        }
+        
+        .input-focus-effect::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #14b8a6;
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .input-focus-effect:focus-within::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        /* Pulse animation for buttons */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(20, 184, 166, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(20, 184, 166, 0);
+            }
+        }
+        
+        .pulse-on-hover:hover {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Markdown content styling */
+        .markdown-content h1, 
+        .markdown-content h2, 
+        .markdown-content h3 {
+            font-family: 'Lexend', sans-serif;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .markdown-content h1 {
+            font-size: 1.5rem;
+        }
+        
+        .markdown-content h2 {
+            font-size: 1.25rem;
+        }
+        
+        .markdown-content h3 {
+            font-size: 1.125rem;
+        }
+        
+        .markdown-content p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .markdown-content ul, 
+        .markdown-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .markdown-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        
+        .markdown-content th, 
+        .markdown-content td {
+            padding: 0.75rem;
+            border: 1px solid #e5e5e5;
+        }
+        
+        .markdown-content th {
+            background-color: #f5f5f5;
+            font-weight: 600;
+        }
+        
+        .markdown-content tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body class="pattern-bg text-neutral-800 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <!-- Header with Logo and Title -->
+        <header class="mb-10">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="bg-gradient-to-r from-brand-600 to-brand-400 p-3 rounded-xl shadow-lg mr-4">
+                        <i class="fas fa-chart-pie text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="heading text-3xl font-bold text-neutral-900 tracking-tight">Budget<span class="text-brand-600">Pro</span></h1>
+                        <p class="text-neutral-500 text-sm">Enterprise Grocery Budget Optimization</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center bg-white rounded-full px-4 py-1.5 shadow-sm border border-neutral-200">
+                        <i class="fas fa-rupee-sign text-brand-600 mr-2"></i>
+                        <span class="text-neutral-700 font-medium">INR/kg</span>
+                    </div>
+                    <div class="bg-white rounded-full px-4 py-1.5 shadow-sm border border-neutral-200 flex items-center">
+                        <i class="fas fa-clock text-brand-600 mr-2"></i>
+                        <span class="text-neutral-700 font-medium" id="current-date">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column - Input and Response -->
+            <div class="lg:col-span-8 space-y-8">
+                <!-- Input Card -->
+                <div class="bg-white rounded-2xl shadow-card border border-neutral-200 transition-all duration-300 hover:shadow-card-hover overflow-hidden">
+                    <div class="bg-gradient-to-r from-brand-700 to-brand-500 px-6 py-4">
+                        <h2 class="heading text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-shopping-basket mr-3"></i>
+                            Shopping Budget Planner
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-neutral-600 mb-6">
+                            Enter your grocery items (in kg) and budget (in INR) to receive AI-powered shopping suggestions optimized for your needs.
+                        </p>
+                        
+                        <div class="mb-6 input-focus-effect">
+                            <div class="relative">
+                                <i class="fas fa-list-ul absolute left-4 top-4 text-neutral-400"></i>
+                                <input
+                                    type="text"
+                                    class="w-full pl-12 pr-4 py-4 rounded-xl border border-neutral-300 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all bg-neutral-50"
+                                    id="userInput"
+                                    placeholder="Enter items (kg) and budget (INR) (e.g., Apples 1kg, Milk 2kg, ₹500)" />
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-medium py-4 px-6 rounded-xl transition duration-300 ease-in-out flex items-center justify-center pulse-on-hover" onclick="sendMessage()">
+                            <i class="fas fa-calculator mr-2"></i>
+                            Generate Budget Plan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Response Card -->
+                <div class="bg-white rounded-2xl shadow-card border border-neutral-200 transition-all duration-300 hover:shadow-card-hover overflow-hidden">
+                    <div class="bg-gradient-to-r from-brand-700 to-brand-500 px-6 py-4 flex justify-between items-center">
+                        <h2 class="heading text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-robot mr-3"></i>
+                            Budget Analysis
+                        </h2>
+                        <div class="text-white text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                            <i class="fas fa-bolt mr-1"></i>
+                            AI-Powered
+                        </div>
+                    </div>
+                    <div id="response" class="p-6 min-h-[300px] markdown-content"></div>
+                </div>
+            </div>
+
+            <!-- Right Column - Calculator and Charts -->
+            <div class="lg:col-span-4 space-y-8">
+                <!-- Calculator Card -->
+                <div class="bg-white rounded-2xl shadow-card border border-neutral-200 transition-all duration-300 hover:shadow-card-hover overflow-hidden sticky top-8">
+                    <div class="bg-gradient-to-r from-brand-700 to-brand-500 px-6 py-4">
+                        <h2 class="heading text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-calculator mr-3"></i>
+                            Budget Calculator
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-5 mb-6">
+                            <div class="input-focus-effect">
+                                <label for="calcBudget" class="block text-neutral-700 text-sm font-medium mb-2 flex items-center">
+                                    <i class="fas fa-wallet text-brand-500 mr-2"></i>
+                                    Total Budget (₹)
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-rupee-sign absolute left-4 top-3.5 text-neutral-400"></i>
+                                    <input type="number" id="calcBudget" class="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all bg-neutral-50" placeholder="Enter budget">
+                                </div>
+                            </div>
+                            
+                            <div class="input-focus-effect">
+                                <label for="calcItem" class="block text-neutral-700 text-sm font-medium mb-2 flex items-center">
+                                    <i class="fas fa-shopping-cart text-brand-500 mr-2"></i>
+                                    Item Name
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-tag absolute left-4 top-3.5 text-neutral-400"></i>
+                                    <input type="text" id="calcItem" class="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all bg-neutral-50" placeholder="Item name">
+                                </div>
+                            </div>
+                            
+                            <div class="input-focus-effect">
+                                <label for="calcPrice" class="block text-neutral-700 text-sm font-medium mb-2 flex items-center">
+                                    <i class="fas fa-tags text-brand-500 mr-2"></i>
+                                    Price (₹/kg)
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-rupee-sign absolute left-4 top-3.5 text-neutral-400"></i>
+                                    <input type="number" id="calcPrice" class="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all bg-neutral-50" placeholder="Price per kg">
+                                </div>
+                            </div>
+                            
+                            <div class="input-focus-effect">
+                                <label for="calcQuantity" class="block text-neutral-700 text-sm font-medium mb-2 flex items-center">
+                                    <i class="fas fa-weight text-brand-500 mr-2"></i>
+                                    Quantity (kg)
+                                </label>
+                                <div class="relative">
+                                    <i class="fas fa-balance-scale absolute left-4 top-3.5 text-neutral-400"></i>
+                                    <input type="number" id="calcQuantity" class="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-300 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all bg-neutral-50" placeholder="Quantity in kg">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-gradient-to-r from-neutral-700 to-neutral-600 hover:from-neutral-800 hover:to-neutral-700 text-white font-medium py-3 px-6 rounded-xl transition duration-300 ease-in-out flex items-center justify-center mb-6" onclick="calculateCost()">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            Calculate Cost
+                        </button>
+                        
+                        <!-- Results Section -->
+                        <div class="bg-neutral-50 rounded-xl border border-neutral-200 p-5">
+                            <div class="mb-4">
+                                <canvas id="budgetChart" width="400" height="200"></canvas>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-neutral-600 flex items-center">
+                                        <i class="fas fa-receipt text-brand-500 mr-2"></i>
+                                        Estimated Cost:
+                                    </span>
+                                    <span id="estimatedCost" class="font-medium text-neutral-800">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-neutral-600 flex items-center">
+                                        <i class="fas fa-shopping-basket text-brand-500 mr-2"></i>
+                                        Total Cost:
+                                    </span>
+                                    <span id="totalCost" class="font-medium text-neutral-800">₹0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-3 border-t border-neutral-200">
+                                    <span class="text-neutral-700 font-medium flex items-center">
+                                        <i class="fas fa-wallet text-brand-500 mr-2"></i>
+                                        Remaining Budget:
+                                    </span>
+                                    <span id="remainingBudget" class="font-semibold text-brand-600">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-neutral-200 pt-8 pb-10">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="bg-gradient-to-r from-brand-600 to-brand-400 p-2 rounded-lg shadow-sm mr-3">
+                        <i class="fas fa-chart-pie text-white text-sm"></i>
+                    </div>
+                    <span class="heading font-semibold text-neutral-700">BudgetPro</span>
+                </div>
+                <div class="text-neutral-500 text-sm">
+                    © 2023 Enterprise Grocery Budget Optimization | All rights reserved
+                </div>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="text-neutral-400 hover:text-brand-500 transition-colors">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="#" class="text-neutral-400 hover:text-brand-500 transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-neutral-400 hover:text-brand-500 transition-colors">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize date display
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+        
+        // Initialize chart
+        let budgetChart;
+        
+        function initChart() {
+            const ctx = document.getElementById('budgetChart').getContext('2d');
+            
+            budgetChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Remaining', 'Spent'],
+                    datasets: [{
+                        data: [100, 0],
+                        backgroundColor: [
+                            '#14b8a6',
+                            '#94a3b8'
+                        ],
+                        borderColor: [
+                            '#0f766e',
+                            '#64748b'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `₹${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize chart on page load
+        initChart();
+
+        let conversationHistory = []; // Store the conversation
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput').value;
+            const responseDiv = document.getElementById('response');
+
+            if (!input) {
+                responseDiv.innerHTML = `
+                    <div class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-xl bg-red-50 border border-red-200">
+                        <i class="fas fa-exclamation-circle mr-2 text-red-500"></i>
+                        <span>Please enter your grocery items (in kg) and budget (in INR).</span>
+                    </div>
+                `;
+                return;
+            }
+
+            responseDiv.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-16">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-neutral-200 border-t-brand-500 rounded-full animate-spin"></div>
+                        <div class="absolute top-0 left-0 w-16 h-16 flex items-center justify-center">
+                            <i class="fas fa-calculator text-brand-500"></i>
+                        </div>
+                    </div>
+                    <span class="mt-6 text-neutral-600 font-medium">Analyzing your budget requirements...</span>
+                    <span class="mt-2 text-neutral-500 text-sm">This may take a moment</span>
+                </div>
+            `;
+
+            // Add the user's message to the conversation history
+            conversationHistory.push({ role: 'user', content: input });
+
+            // Construct the messages array for the API request
+            const messages = [
+                {
+                    role: 'system',
+                    content:
+                        'You are an AI Grocery Budget Planner. Your purpose is to help users maximize their grocery shopping budget in Indian Rupees (INR) and kilograms (kg). You can provide optimized shopping suggestions and use a budget calculator. If the user asks a question outside of grocery planning or budget calculation, respond with "I can only assist with grocery budget planning and calculations in INR and kg." Remember details from previous turns and do not ask for the same items or budget again. If you need more information, ask a clarifying question about the items (in kg) or budget (in INR) listed.',
+                },
+                ...conversationHistory.map((message) => ({
+                    role: message.role,
+                    content: message.content,
+                })),
+            ];
+
+            try {
+                const response = await fetch(
+                    'https://openrouter.ai/api/v1/chat/completions',
+                    {
+                        method: 'POST',
+                        headers: {
+                            Authorization:
+                                'Bearer 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',
+                            'HTTP-Referer': 'https://www.sitename.com',
+                            'X-Title': 'AIGroceryBudgetPlanner_INR_KG',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            model: 'google/gemini-pro',
+                            messages: messages, // Send the entire history
+                        }),
+                    },
+                );
+
+                const data = await response.json();
+                console.log(data);
+
+                const aiResponse =
+                    data.choices?.[0]?.message?.content ||
+                    'No response received.';
+
+                // Add the assistant's response to the conversation history
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: aiResponse,
+                });
+
+                const markdownText = aiResponse;
+                responseDiv.innerHTML = `
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-neutral-200">
+                        <div class="flex items-center">
+                            <div class="bg-brand-100 p-2 rounded-lg text-brand-600 mr-3">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div>
+                                <h3 class="heading text-lg font-medium text-neutral-900">Budget Analysis</h3>
+                                <p class="text-neutral-500 text-sm">AI-generated recommendations</p>
+                            </div>
+                        </div>
+                        <div class="text-xs bg-neutral-100 text-neutral-600 px-3 py-1 rounded-full">
+                            ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    </div>
+                    <div class="markdown-content">
+                        ${marked.parse(markdownText)}
+                    </div>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `
+                    <div class="flex items-center p-5 mb-4 text-sm text-red-800 rounded-xl bg-red-50 border border-red-200">
+                        <i class="fas fa-exclamation-triangle mr-3 text-red-500 text-lg"></i>
+                        <div>
+                            <p class="font-medium mb-1">Error Occurred</p>
+                            <p>${error.message}</p>
+                        </div>
+                    </div>
+                    <div class="text-center mt-8">
+                        <button onclick="sendMessage()" class="bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out">
+                            <i class="fas fa-redo mr-2"></i>
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function calculateCost() {
+            const budget = parseFloat(document.getElementById('calcBudget').value) || 0;
+            const price = parseFloat(document.getElementById('calcPrice').value) || 0;
+            const quantity = parseFloat(document.getElementById('calcQuantity').value) || 0;
+
+            const estimatedCost = price * quantity;
+            const remaining = budget - estimatedCost;
+            
+            // Update text displays
+            document.getElementById('estimatedCost').textContent = `₹${estimatedCost.toFixed(2)}`;
+            document.getElementById('totalCost').textContent = `₹${estimatedCost.toFixed(2)}`;
+            
+            const remainingElement = document.getElementById('remainingBudget');
+            remainingElement.textContent = `₹${remaining.toFixed(2)}`;
+            
+            // Add color based on remaining budget
+            if (remaining < 0) {
+                remainingElement.className = 'font-semibold text-red-600';
+            } else if (remaining === 0) {
+                remainingElement.className = 'font-semibold text-yellow-600';
+            } else {
+                remainingElement.className = 'font-semibold text-brand-600';
+            }
+            
+            // Update chart
+            if (budgetChart) {
+                if (budget > 0) {
+                    // If there's a budget, show remaining vs spent
+                    const spent = Math.min(estimatedCost, budget); // Cap at budget
+                    const remainingBudget = Math.max(0, budget - spent);
+                    
+                    budgetChart.data.datasets[0].data = [remainingBudget, spent];
+                    budgetChart.data.labels = ['Remaining', 'Spent'];
+                } else {
+                    // If no budget, just show cost
+                    budgetChart.data.datasets[0].data = [0, estimatedCost];
+                    budgetChart.data.labels = ['Budget', 'Cost'];
+                }
+                
+                // Add animation effect
+                budgetChart.update();
+            }
+            
+            // Add a subtle animation to the results section
+            const resultsSection = document.querySelector('.bg-neutral-50');
+            resultsSection.classList.add('animate-pulse');
+            setTimeout(() => {
+                resultsSection.classList.remove('animate-pulse');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
